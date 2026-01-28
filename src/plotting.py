@@ -208,3 +208,106 @@ def save_approved_drugs(
         nme_drugs_path = output_dir / "approved_drugs_nme.csv"
         nme_df.to_csv(nme_drugs_path, index=False)
         logger.info(f"Saved NME approved drugs to {nme_drugs_path}")
+
+
+def create_company_plots(output_dir: Path) -> None:
+    """Create and save plots showing drugs per company.
+
+    Args:
+        output_dir: Directory containing approved_drugs_all.csv.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Read the approved drugs data
+    csv_path = output_dir / "approved_drugs_all.csv"
+    if not csv_path.exists():
+        logger.warning(f"CSV file not found: {csv_path}")
+        return
+
+    df = pd.read_csv(csv_path)
+
+    # Group by company and count drugs
+    drugs_per_company = (
+        df.groupby("company").size().sort_values(ascending=False)
+    )
+
+    # Create plot for top 30 companies
+    top_n = 30
+    top_companies = drugs_per_company.head(top_n)
+
+    fig, ax = plt.subplots(figsize=(14, 10))
+
+    bars = ax.barh(range(len(top_companies)), top_companies.values,
+                    color="teal", alpha=0.8)
+
+    # Color bars with gradient
+    colors = plt.cm.viridis(
+        (top_companies.values - top_companies.values.min())
+        / (top_companies.values.max() - top_companies.values.min())
+    )
+    for bar, color in zip(bars, colors):
+        bar.set_color(color)
+
+    ax.set_yticks(range(len(top_companies)))
+    ax.set_yticklabels(top_companies.index, fontsize=10)
+    ax.set_xlabel("Number of Approved Drugs", fontsize=12, fontweight="bold")
+    ax.set_title(
+        f"Top {top_n} Pharmaceutical Companies by Number of Approved Drugs",
+        fontsize=14,
+        fontweight="bold",
+        pad=20,
+    )
+    ax.invert_yaxis()
+    ax.grid(axis="x", alpha=0.3)
+
+    # Add value labels on bars
+    for i, v in enumerate(top_companies.values):
+        ax.text(v + 0.5, i, str(v), va="center", fontsize=9)
+
+    plt.tight_layout()
+    plot_path = output_dir / "drugs_per_company_top30.png"
+    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+    logger.info(f"Saved company drugs plot to {plot_path}")
+    plt.close()
+
+    # Create plot for all companies (scatter/distribution)
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    # Create histogram of company sizes
+    ax.hist(drugs_per_company.values, bins=50, color="steelblue",
+            alpha=0.7, edgecolor="black")
+
+    ax.set_xlabel("Number of Approved Drugs per Company", fontsize=12,
+                  fontweight="bold")
+    ax.set_ylabel("Number of Companies", fontsize=12, fontweight="bold")
+    ax.set_title(
+        "Distribution of Approved Drugs Across Pharmaceutical Companies",
+        fontsize=14,
+        fontweight="bold",
+    )
+    ax.grid(axis="y", alpha=0.3)
+
+    # Add statistics
+    stats_text = (
+        f"Total Companies: {len(drugs_per_company)}\n"
+        f"Total Drugs: {drugs_per_company.sum()}\n"
+        f"Mean: {drugs_per_company.mean():.1f}\n"
+        f"Median: {drugs_per_company.median():.1f}\n"
+        f"Max: {drugs_per_company.max()}"
+    )
+    ax.text(
+        0.97,
+        0.97,
+        stats_text,
+        transform=ax.transAxes,
+        fontsize=11,
+        verticalalignment="top",
+        horizontalalignment="right",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+    )
+
+    plt.tight_layout()
+    dist_path = output_dir / "company_distribution.png"
+    plt.savefig(dist_path, dpi=300, bbox_inches="tight")
+    logger.info(f"Saved company distribution plot to {dist_path}")
+    plt.close()

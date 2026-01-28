@@ -241,6 +241,7 @@ class FDAClient:
             - application_number: FDA application number
             - brand_name: Brand name(s) of the drug
             - generic_name: Generic name(s) of the drug
+            - company: Manufacturer company name
             - approval_year: Year of approval
             - submission_type: Type of submission (ORIG, SUPPL, etc.)
             - submission_class: Class of submission
@@ -330,6 +331,9 @@ class FDAClient:
                                             generic_names = openfda.get(
                                                 "generic_name", []
                                             )
+                                            manufacturers = openfda.get(
+                                                "manufacturer_name", []
+                                            )
 
                                             brand_name = (
                                                 brand_names[0]
@@ -341,6 +345,11 @@ class FDAClient:
                                                 if generic_names
                                                 else "N/A"
                                             )
+                                            company = (
+                                                manufacturers[0]
+                                                if manufacturers
+                                                else "N/A"
+                                            )
 
                                             drugs_list.append(
                                                 {
@@ -350,6 +359,7 @@ class FDAClient:
                                                     ),
                                                     "brand_name": brand_name,
                                                     "generic_name": generic_name,
+                                                    "company": company,
                                                     "approval_year": year,
                                                     "submission_class": class_desc,
                                                 }

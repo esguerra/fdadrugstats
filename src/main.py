@@ -9,6 +9,7 @@ from typing import Optional
 from fda_client import FDAClient
 from plotting import (
     create_approval_plots,
+    create_company_plots,
     save_approval_data,
     save_approved_drugs,
 )
@@ -124,6 +125,7 @@ def main() -> None:
                     nme_approvals,
                     RESULTS_DIR,
                 )
+                create_company_plots(RESULTS_DIR)
 
                 print(f"\n✓ Results saved to: {RESULTS_DIR}")
                 print(f"  - CSV files with approval statistics")
