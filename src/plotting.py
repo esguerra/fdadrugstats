@@ -1,0 +1,210 @@
+"""Plotting module for drug approval statistics."""
+
+import logging
+from pathlib import Path
+from typing import Any
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+
+def create_approval_plots(
+    all_approvals: dict[int, int],
+    nme_approvals: dict[int, int],
+    output_dir: Path,
+) -> None:
+    """Create and save plots for drug approval statistics.
+
+    Args:
+        all_approvals: Dictionary mapping year to all approval counts.
+        nme_approvals: Dictionary mapping year to NME approval counts.
+        output_dir: Directory to save plot images.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create figure with subplots
+    fig, axes = plt.subplots(2, 1, figsize=(14, 10))
+
+    # Plot 1: All Approvals
+    years_all = sorted(all_approvals.keys())
+    counts_all = [all_approvals[year] for year in years_all]
+
+    axes[0].bar(years_all, counts_all, color="steelblue", alpha=0.7)
+    axes[0].set_xlabel("Year", fontsize=12)
+    axes[0].set_ylabel("Number of Approvals", fontsize=12)
+    axes[0].set_title(
+        "FDA Drug Approvals by Year (Type 1-4, 10)",
+        fontsize=14,
+        fontweight="bold",
+    )
+    axes[0].grid(axis="y", alpha=0.3)
+    axes[0].set_xlim(years_all[0] - 1, years_all[-1] + 1)
+
+    # Plot 2: NME Approvals
+    years_nme = sorted(nme_approvals.keys())
+    counts_nme = [nme_approvals[year] for year in years_nme]
+
+    axes[1].bar(years_nme, counts_nme, color="darkgreen", alpha=0.7)
+    axes[1].set_xlabel("Year", fontsize=12)
+    axes[1].set_ylabel("Number of NME Approvals", fontsize=12)
+    axes[1].set_title(
+        "FDA New Molecular Entity (NME) Approvals by Year (Type 1)",
+        fontsize=14,
+        fontweight="bold",
+    )
+    axes[1].grid(axis="y", alpha=0.3)
+    axes[1].set_xlim(years_nme[0] - 1, years_nme[-1] + 1)
+
+    plt.tight_layout()
+    plot_path = output_dir / "drug_approvals.png"
+    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+    logger.info(f"Saved approval plots to {plot_path}")
+    plt.close()
+
+    # Create comparison plot for recent years
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    # Filter for recent years (last 15 years)
+    recent_cutoff = max(years_all) - 15
+    recent_years = sorted(
+        set(years_all + years_nme).intersection(
+            set(range(recent_cutoff, max(years_all) + 1))
+        )
+    )
+
+    all_recent = [all_approvals.get(year, 0) for year in recent_years]
+    nme_recent = [nme_approvals.get(year, 0) for year in recent_years]
+
+    x = range(len(recent_years))
+    width = 0.35
+
+    ax.bar(
+        [i - width / 2 for i in x],
+        all_recent,
+        width,
+        label="All Approvals (Type 1-4, 10)",
+        color="steelblue",
+        alpha=0.8,
+    )
+    ax.bar(
+        [i + width / 2 for i in x],
+        nme_recent,
+        width,
+        label="New Molecular Entities (Type 1)",
+        color="darkgreen",
+        alpha=0.8,
+    )
+
+    ax.set_xlabel("Year", fontsize=12)
+    ax.set_ylabel("Number of Approvals", fontsize=12)
+    ax.set_title(
+        "FDA Drug Approvals Comparison - Recent Years",
+        fontsize=14,
+        fontweight="bold",
+    )
+    ax.set_xticks(x)
+    ax.set_xticklabels(recent_years, rotation=45)
+    ax.legend(fontsize=11)
+    ax.grid(axis="y", alpha=0.3)
+
+    plt.tight_layout()
+    comparison_path = output_dir / "approvals_comparison_recent.png"
+    plt.savefig(comparison_path, dpi=300, bbox_inches="tight")
+    logger.info(f"Saved comparison plot to {comparison_path}")
+    plt.close()
+
+
+def save_approval_data(
+    all_approvals: dict[int, int],
+    nme_approvals: dict[int, int],
+    output_dir: Path,
+) -> None:
+    """Save approval data to CSV files.
+
+    Args:
+        all_approvals: Dictionary mapping year to all approval counts.
+        nme_approvals: Dictionary mapping year to NME approval counts.
+        output_dir: Directory to save CSV files.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create combined dataframe
+    all_years = sorted(
+        set(all_approvals.keys()).union(set(nme_approvals.keys()))
+    )
+    df = pd.DataFrame(
+        {
+            "Year": all_years,
+            "All_Approvals_Type1to4_10": [
+                all_approvals.get(year, 0) for year in all_years
+            ],
+            "NME_Approvals_Type1": [
+                nme_approvals.get(year, 0) for year in all_years
+            ],
+        }
+    )
+
+    # Save to CSV
+    csv_path = output_dir / "drug_approvals_by_year.csv"
+    df.to_csv(csv_path, index=False)
+    logger.info(f"Saved approval data to {csv_path}")
+
+    # Save individual CSV files
+    all_df = pd.DataFrame(
+        {
+            "Year": sorted(all_approvals.keys()),
+            "Count": [
+                all_approvals[year]
+                for year in sorted(all_approvals.keys())
+            ],
+        }
+    )
+    all_csv_path = output_dir / "all_approvals.csv"
+    all_df.to_csv(all_csv_path, index=False)
+    logger.info(f"Saved all approvals data to {all_csv_path}")
+
+    nme_df = pd.DataFrame(
+        {
+            "Year": sorted(nme_approvals.keys()),
+            "Count": [
+                nme_approvals[year]
+                for year in sorted(nme_approvals.keys())
+            ],
+        }
+    )
+    nme_csv_path = output_dir / "nme_approvals.csv"
+    nme_df.to_csv(nme_csv_path, index=False)
+    logger.info(f"Saved NME approvals data to {nme_csv_path}")
+
+
+def save_approved_drugs(
+    all_drugs: list[dict[str, Any]],
+    nme_drugs: list[dict[str, Any]],
+    output_dir: Path,
+) -> None:
+    """Save approved drug names and details to CSV files.
+
+    Args:
+        all_drugs: List of all approved drugs with details.
+        nme_drugs: List of NME approved drugs with details.
+        output_dir: Directory to save CSV files.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save all approved drugs
+    if all_drugs:
+        all_df = pd.DataFrame(all_drugs)
+        all_df = all_df.sort_values("approval_year")
+        all_drugs_path = output_dir / "approved_drugs_all.csv"
+        all_df.to_csv(all_drugs_path, index=False)
+        logger.info(f"Saved all approved drugs to {all_drugs_path}")
+
+    # Save NME approved drugs
+    if nme_drugs:
+        nme_df = pd.DataFrame(nme_drugs)
+        nme_df = nme_df.sort_values("approval_year")
+        nme_drugs_path = output_dir / "approved_drugs_nme.csv"
+        nme_df.to_csv(nme_drugs_path, index=False)
+        logger.info(f"Saved NME approved drugs to {nme_drugs_path}")
