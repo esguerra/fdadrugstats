@@ -27,17 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generate results (only if FDA_API_KEY is set)
-        if: ${{ secrets.FDA_API_KEY != '' }}
-        env:
-          FDA_API_KEY: ${{ secrets.FDA_API_KEY }}
+      - name: Generate results
         run: |
           python src/main.py
-
-      - name: Generate results (skipped: no API key)
-        if: ${{ secrets.FDA_API_KEY == '' }}
-        run: |
-          echo "FDA_API_KEY not set — skipping results generation. Using checked-in docs/ if present."
 
       - name: Sync results
         run: |
