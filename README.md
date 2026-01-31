@@ -124,6 +124,25 @@ When you run the script, it generates the following files in the `results/` fold
   - Bottom: NME approvals by year
 - **approvals_comparison_recent.png** - Side-by-side comparison of all approvals vs NME for the last 15 years
 
+## Publishing results (GitHub Pages)
+
+This project can publish generated CSVs and plots as a static site via GitHub Pages. The repository includes a workflow `.github/workflows/pages.yml` that runs on push to `main` and performs the following steps:
+
+- Installs dependencies (`pip install -r requirements.txt`)
+- Runs `python src/main.py` to generate `results/`
+- Runs `python scripts/sync_results.py` to copy results into `docs/results/`
+- Deploys the `docs/` folder to GitHub Pages (the repo contains `docs/CNAME` configured for `fdadrugstats.mesguerra.org`)
+
+If you prefer local control, run:
+
+```bash
+python src/main.py
+python scripts/sync_results.py --force
+```
+
+> Add `FDA_API_KEY` as a repository secret (`Settings → Secrets → Actions`) to avoid rate limits when the workflow runs.
+
+
 ## Development
 
 Running integration tests (live API)

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FDA DrugStats — Results</title>
+  <style>
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width:1100px;margin:2rem auto;color:#222}
+    header{margin-bottom:2rem}
+    h1{margin:0 0 .2rem}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem}
+    .card{border:1px solid #eee;padding:1rem;border-radius:6px;background:#fff}
+    img{max-width:100%;height:auto}
+    table{width:100%;border-collapse:collapse}
+    table th, table td{border:1px solid #ddd;padding:.35rem;text-align:left}
+
+    /* Toggle styles for static vs interactive charts */
+    .toggle { margin-top: .6rem; font-size: .95rem; }
+    .static-only { display: none; }
+    /* When using static, hide interactive charts and show static images */
+    body.use-static .interactive-only { display: none !important; }
+    body.use-static .static-only { display: block !important; }
+
+    footer{margin-top:2rem;color:#666;font-size:.9rem}
+    @media (max-width:760px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FDA DrugStats — Results</h1>
+    <p>Static site exposing generated results from the <code>drugstats</code> project. Data are updated when results are synced and this site is deployed.</p>
+    <div class="toggle">
+      <label><input type="checkbox" id="toggle_static" /> Use static PNGs (for slow connections)</label>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Approval plots</h2>
+      <p><strong>By year</strong></p>
+      <div id="approvals_plot" class="interactive-only" style="height:380px"></div>
+      <img id="approvals_png" class="static-only" src="results/drug_approvals.png" alt="Drug approvals by year (PNG)" style="max-width:100%;height:auto" />
+      <p class="muted"><a href="results/drug_approvals.png">PNG fallback / Download</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Approvals comparison</h2>
+      <div id="comparison_plot" class="interactive-only" style="height:320px"></div>
+      <img id="comparison_png" class="static-only" src="results/approvals_comparison_recent.png" alt="Approvals comparison (PNG)" style="max-width:100%;height:auto" />
+      <p class="muted"><a href="results/approvals_comparison_recent.png">PNG fallback / Download</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Company analysis</h2>
+      <div id="company_plot" class="interactive-only" style="height:400px"></div>
+      <img id="company_png" class="static-only" src="results/drugs_per_company_top30.png" alt="Top companies (PNG)" style="max-width:100%;height:auto" />
+      <p class="muted"><a href="results/drugs_per_company_top30.png">PNG fallback / Download</a></p>
+    </div>
+
+    <div class="card">
+      <h2>Adverse events</h2>
+      <div id="adverse_plot" class="interactive-only" style="height:340px"></div>
+      <img id="adverse_png" class="static-only" src="results/adverse_events_by_year.png" alt="Adverse events by year (PNG)" style="max-width:100%;height:auto" />
+      <p><a href="results/adverse_events_by_year.png">PNG fallback</a> • <a href="results/adverse_events_by_year.csv">CSV</a></p>
+      <h3>Top reported drugs</h3>
+      <div id="top_drugs_plot" class="interactive-only" style="height:340px"></div>
+      <img id="top_drugs_png" class="static-only" src="results/top_reported_drugs.png" alt="Top reported drugs (PNG)" style="max-width:100%;height:auto" />
+      <p><a href="results/top_reported_drugs.png">PNG fallback</a> • <a href="results/top_reported_drugs.csv">CSV</a></p>
+      <h3>Top reactions</h3>
+      <div id="top_reactions_plot" class="interactive-only" style="height:340px"></div>
+      <img id="top_reactions_png" class="static-only" src="results/top_reactions.png" alt="Top reactions (PNG)" style="max-width:100%;height:auto" />
+      <p><a href="results/top_reactions.png">PNG fallback</a> • <a href="results/top_reactions.csv">CSV</a></p>
+    </div>
+  </section>
+
+  <section style="margin-top:2rem" class="card">
+    <h2>Raw Data</h2>
+    <p>CSV files are available under <code>/results/</code>. You can download or inspect them directly.</p>
+    <ul>
+      <li><a href="results/approved_drugs_all.csv">approved_drugs_all.csv</a></li>
+      <li><a href="results/approved_drugs_nme.csv">approved_drugs_nme.csv</a></li>
+      <li><a href="results/drug_approvals_by_year.csv">drug_approvals_by_year.csv</a></li>
+      <li><a href="results/adverse_events_by_year.csv">adverse_events_by_year.csv</a></li>
+      <li><a href="results/top_reported_drugs.csv">top_reported_drugs.csv</a></li>
+      <li><a href="results/top_reactions.csv">top_reactions.csv</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Hosted on GitHub Pages. To deploy, see repository instructions (sync results and push to main; GitHub Actions handles publishing).</p>
+  </footer>
+
+  <!-- Plotly and CSV parsing for interactive charts -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="js/plotly_charts.js"></script>
+</body>
+</html>
