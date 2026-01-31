@@ -1,0 +1,56 @@
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate results
+        env:
+          FDA_API_KEY: ${{ secrets.FDA_API_KEY }}
+        run: |
+          python src/main.py
+
+      - name: Sync results
+        run: |
+          python scripts/sync_results.py
+
+      - name: Build site (no-op)
+        run: echo "No static site build step required; using docs/ contents"
+
+      - name: Upload to Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
