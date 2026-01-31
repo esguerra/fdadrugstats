@@ -311,3 +311,114 @@ def create_company_plots(output_dir: Path) -> None:
     plt.savefig(dist_path, dpi=300, bbox_inches="tight")
     logger.info(f"Saved company distribution plot to {dist_path}")
     plt.close()
+
+
+def create_adverse_event_plots(
+    events_by_year: dict[int, int],
+    top_drugs: list[dict[str, int]],
+    top_reactions: list[dict[str, int]],
+    output_dir: Path,
+    top_n: int = 20,
+) -> None:
+    """Create plots for adverse event summaries.
+
+    Args:
+        events_by_year: Mapping year -> adverse event count.
+        top_drugs: List of dicts with keys `term` and `count` for top drugs.
+        top_reactions: List of dicts with keys `term` and `count` for top reactions.
+        output_dir: Directory to save plots.
+        top_n: Number of top items to plot for drugs/reactions.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Time series of adverse events by year
+    if events_by_year:
+        years = sorted(events_by_year.keys())
+        counts = [events_by_year[y] for y in years]
+
+        fig, ax = plt.subplots(figsize=(14, 6))
+        ax.plot(years, counts, marker="o", color="crimson")
+        ax.set_xlabel("Year", fontsize=12)
+        ax.set_ylabel("Number of Reports", fontsize=12)
+        ax.set_title("Adverse Event Reports by Year", fontsize=14, fontweight="bold")
+        ax.grid(alpha=0.3)
+        plt.tight_layout()
+        path = output_dir / "adverse_events_by_year.png"
+        plt.savefig(path, dpi=300, bbox_inches="tight")
+        logger.info(f"Saved adverse events time series to {path}")
+        plt.close()
+
+    # Top reported drugs bar chart
+    if top_drugs:
+        df_drugs = pd.DataFrame(top_drugs).head(top_n)
+        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.25)))
+        ax.barh(df_drugs["term"].astype(str), df_drugs["count"], color="#2ca02c")
+        ax.set_xlabel("Number of Reports", fontsize=12)
+        ax.set_title(f"Top {min(top_n, len(df_drugs))} Reported Drugs", fontsize=14, fontweight="bold")
+        ax.invert_yaxis()
+        ax.grid(axis="x", alpha=0.3)
+        plt.tight_layout()
+        path = output_dir / "top_reported_drugs.png"
+        plt.savefig(path, dpi=300, bbox_inches="tight")
+        logger.info(f"Saved top reported drugs plot to {path}")
+        plt.close()
+
+    # Top reactions bar chart
+    if top_reactions:
+        df_rxn = pd.DataFrame(top_reactions).head(top_n)
+        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.25)))
+        ax.barh(df_rxn["term"].astype(str), df_rxn["count"], color="#1f77b4")
+        ax.set_xlabel("Number of Reports", fontsize=12)
+        ax.set_title(f"Top {min(top_n, len(df_rxn))} Reported Reactions", fontsize=14, fontweight="bold")
+        ax.invert_yaxis()
+        ax.grid(axis="x", alpha=0.3)
+        plt.tight_layout()
+        path = output_dir / "top_reactions.png"
+        plt.savefig(path, dpi=300, bbox_inches="tight")
+        logger.info(f"Saved top reactions plot to {path}")
+        plt.close()
+
+
+def save_adverse_events_data(
+    events_by_year: dict[int, int],
+    top_drugs: list[dict[str, int]],
+    top_reactions: list[dict[str, int]],
+    output_dir: Path,
+) -> None:
+    """Save adverse events summaries to CSV files.
+
+    Args:
+        events_by_year: Dict mapping year to adverse event counts.
+        top_drugs: List of dicts returned by API with keys `term` and `count`.
+        top_reactions: List of dicts returned by API with keys `term` and `count`.
+        output_dir: Directory to save CSV files.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save events by year
+    if events_by_year:
+        df_year = pd.DataFrame(
+            {
+                "Year": sorted(events_by_year.keys()),
+                "Count": [events_by_year[y] for y in sorted(events_by_year.keys())],
+            }
+        )
+        year_path = output_dir / "adverse_events_by_year.csv"
+        df_year.to_csv(year_path, index=False)
+        logger.info(f"Saved adverse events per year to {year_path}")
+
+    # Save top reported drugs
+    if top_drugs:
+        df_drugs = pd.DataFrame(top_drugs)
+        df_drugs = df_drugs.rename(columns={"term": "Drug", "count": "Reports"})
+        drugs_path = output_dir / "top_reported_drugs.csv"
+        df_drugs.to_csv(drugs_path, index=False)
+        logger.info(f"Saved top reported drugs to {drugs_path}")
+
+    # Save top reactions
+    if top_reactions:
+        df_rxn = pd.DataFrame(top_reactions)
+        df_rxn = df_rxn.rename(columns={"term": "Reaction", "count": "Reports"})
+        rxn_path = output_dir / "top_reactions.csv"
+        df_rxn.to_csv(rxn_path, index=False)
+        logger.info(f"Saved top reactions to {rxn_path}")

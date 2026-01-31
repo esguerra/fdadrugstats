@@ -191,41 +191,88 @@ class FDAClient:
     def get_adverse_events_by_year(self) -> dict[int, int]:
         """Retrieve the number of adverse events reported per year.
 
+        This implementation uses the API's aggregation (`count=receivedate`) to
+        obtain counts per report date and then aggregates them by year. This
+        is more reliable and scalable than fetching raw event records.
+
         Returns:
             Dictionary mapping year to count of adverse events.
         """
         events_by_year: dict[int, int] = {}
 
         try:
+            # Use the API's count aggregation on receivedate to obtain date-bucketed counts
             params = {
+                "count": "receivedate",
                 "limit": 1000,
             }
 
             response = self._make_request(self.BASE_URL, params)
 
-            if "results" not in response:
-                logger.warning("No adverse events found in FDA API response")
+            if "results" not in response or not response["results"]:
+                logger.warning("No adverse event aggregates found in FDA API response")
                 return events_by_year
 
-            for event in response["results"]:
-                # Extract year from receive date
-                receive_date = event.get("receivedate", "")
-                if receive_date:
-                    try:
-                        year = int(receive_date[:4])
-                        events_by_year[year] = events_by_year.get(year, 0) + 1
-                    except (ValueError, IndexError):
-                        logger.debug(f"Could not parse date: {receive_date}")
+            for entry in response["results"]:
+                time = entry.get("time") or entry.get("term")
+                count = entry.get("count", 0)
+                if not time:
+                    continue
+                # time comes as YYYYMMDD strings; aggregate by year
+                try:
+                    year = int(str(time)[:4])
+                    events_by_year[year] = events_by_year.get(year, 0) + int(count)
+                except (ValueError, TypeError):
+                    logger.debug(f"Could not parse time: {time}")
 
             logger.info(
-                f"Successfully retrieved adverse events for "
-                f"{len(events_by_year)} years"
+                f"Successfully retrieved adverse event counts for {len(events_by_year)} years"
             )
-            return events_by_year
+            return dict(sorted(events_by_year.items()))
 
         except Exception as e:
-            logger.error(f"Error retrieving adverse events: {e}")
+            logger.error(f"Error retrieving adverse events by year: {e}")
             raise
+
+    def get_top_reported_drugs(self, limit: int = 20) -> list[dict[str, int]]:
+        """Return top reported medicinal products in adverse event reports.
+
+        Args:
+            limit: Number of top terms to return.
+
+        Returns:
+            List of dicts with keys `term` and `count`.
+        """
+        params = {"count": "patient.drug.medicinalproduct.exact", "limit": limit}
+        resp = self._make_request(self.BASE_URL, params)
+        return resp.get("results", [])
+
+    def get_top_reactions(self, limit: int = 20) -> list[dict[str, int]]:
+        """Return top reported reaction MedDRA Preferred Terms (PT).
+
+        Args:
+            limit: Number of top reactions to return.
+
+        Returns:
+            List of dicts with keys `term` and `count`.
+        """
+        params = {"count": "patient.reaction.reactionmeddrapt.exact", "limit": limit}
+        resp = self._make_request(self.BASE_URL, params)
+        return resp.get("results", [])
+
+    def get_adverse_event_counts(self, count_field: str, limit: int = 100) -> list[dict[str, int]]:
+        """Generic helper to get aggregated counts for a given field using API count.
+
+        Args:
+            count_field: Field to aggregate on (e.g., 'companynumb', 'patient.reaction.reactionmeddrapt.exact').
+            limit: Max number of buckets to retrieve.
+
+        Returns:
+            List of aggregation results as returned by the API.
+        """
+        params = {"count": count_field, "limit": limit}
+        resp = self._make_request(self.BASE_URL, params)
+        return resp.get("results", [])
 
     def get_approved_drugs(
         self, include_all_types: bool = True

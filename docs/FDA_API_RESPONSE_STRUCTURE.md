@@ -1,9 +1,11 @@
 # FDA Drug API Response Structure
 
 ## Overview
+
 This document describes the structure and content of responses from the FDA's Drug FDA API endpoint (`https://api.fda.gov/drug/drugsfda.json`), which provides information about FDA-approved drugs.
 
 ## API Endpoint
+
 - **Base URL:** `https://api.fda.gov/drug/drugsfda.json`
 - **Rate Limit:** 100 requests per minute (higher with API key)
 - **Pagination:** `limit` (max 1000) and `skip` (max 25000) parameters
@@ -12,6 +14,7 @@ This document describes the structure and content of responses from the FDA's Dr
 ## Response Structure
 
 ### Top-Level Fields
+
 
 ```json
 {
@@ -24,21 +27,25 @@ This document describes the structure and content of responses from the FDA's Dr
 ```
 
 ### Application Number
+
 - **Type:** String
 - **Description:** FDA's unique identifier for the drug application
 - **Format:** NDA (New Drug Application) or ANDA (Abbreviated New Drug Application) followed by numbers
 - **Examples:** `NDA002282`, `ANDA078284`
 
 ### Sponsor Name
+
 - **Type:** String
 - **Description:** Company or organization that submitted the drug application
 - **Examples:** `ORBION PHARMS`, `Wyeth Pharmaceuticals LLC`
 
 ## Submissions Array
 
+
 Each drug application can have multiple submissions. A submission represents a formal request or update to the FDA.
 
 ### Submission Fields
+
 
 ```json
 {
@@ -54,35 +61,42 @@ Each drug application can have multiple submissions. A submission represents a f
 ```
 
 #### submission_type
+
 - **Type:** String
 - **Description:** Whether this is an original (ORIG) or supplemental (SUPPL) submission
 - **Possible Values:** `ORIG`, `SUPPL`
 
 #### submission_number
+
 - **Type:** String
 - **Description:** Sequential number for the submission
 
 #### submission_status
+
 - **Type:** String
 - **Description:** Approval status of the submission
 - **Possible Values:** `AP` (Approved), `RJ` (Rejected), `WD` (Withdrawn), etc.
 
 #### submission_status_date
+
 - **Type:** String (YYYYMMDD format)
 - **Description:** Date when the submission status was finalized
 - **Example:** `20090810` = August 10, 2009
 
 #### review_priority
+
 - **Type:** String
 - **Description:** Priority level of the FDA review
 - **Possible Values:** `STANDARD`, `PRIORITY`
 
 #### submission_class_code
+
 - **Type:** String
 - **Description:** Code for the submission class
 - **Examples:** `TYPE1`, `LABELING`, `CMC`, `EFFICACY`, `REMS`
 
 #### submission_class_code_description
+
 - **Type:** String
 - **Description:** Human-readable description of the submission class
 - **See below** for complete list of all submission types
@@ -92,7 +106,9 @@ Each drug application can have multiple submissions. A submission represents a f
 The following is a comprehensive list of all submission class types found in the FDA database:
 
 ### Original Drug Approvals (ORIG submissions)
+
 These represent original submissions for new drugs:
+
 - **Type 1 - New Molecular Entity** - Completely new drug compound
 - **Type 2 - New Active Ingredient** - New therapeutic ingredient in existing drug class
 - **Type 3 - New Dosage Form** - Existing drug in new formulation (tablet, capsule, etc.)
@@ -102,7 +118,9 @@ These represent original submissions for new drugs:
 - **Type 7 - Drug Already Marketed without Approved NDA** - Drug previously approved or grandfathered
 
 ### Update/Supplemental Submissions (SUPPL submissions)
+
 These represent updates to approved applications:
+
 - **Labeling** - Changes to prescribing information, packaging, or labels
 - **Manufacturing (CMC)** - Chemistry, Manufacturing, and Controls updates
 - **Efficacy** - Clinical efficacy data updates
@@ -133,6 +151,7 @@ The `openfda` field contains enriched, indexed data from multiple FDA systems fo
 ```
 
 ### OpenFDA Fields
+
 - **application_number** - FDA application number(s)
 - **brand_name** - Trademarked product name(s)
 - **generic_name** - Generic/chemical name(s)
@@ -171,6 +190,7 @@ Each drug application includes one or more products (different formulations, str
 ```
 
 ### Product Fields
+
 - **product_number** - Product identifier within the application
 - **reference_drug** - Whether it's designated as a reference drug for generics
 - **brand_name** - Product brand name
@@ -184,6 +204,7 @@ Each drug application includes one or more products (different formulations, str
 ## Current Filtering in DrugStats
 
 The drugstats script currently filters for **ORIG (original) submissions** with **AP (approved) status** and includes the following submission types:
+
 - Type 1 - New Molecular Entity (NME)
 - Type 2 - New Active Ingredient
 - Type 3 - New Dosage Form

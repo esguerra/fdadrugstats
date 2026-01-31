@@ -12,6 +12,7 @@ from plotting import (
     create_company_plots,
     save_approval_data,
     save_approved_drugs,
+    save_adverse_events_data,
 )
 from statistics import calculate_summary_stats, format_statistics
 
@@ -126,6 +127,19 @@ def main() -> None:
                     RESULTS_DIR,
                 )
                 create_company_plots(RESULTS_DIR)
+
+                # Adverse event summaries
+                logger.info("Fetching adverse event summaries...")
+                events_by_year = client.get_adverse_events_by_year()
+                top_drugs = client.get_top_reported_drugs(limit=50)
+                top_reactions = client.get_top_reactions(limit=50)
+
+                save_adverse_events_data(
+                    events_by_year,
+                    top_drugs,
+                    top_reactions,
+                    RESULTS_DIR,
+                )
 
                 print(f"\n✓ Results saved to: {RESULTS_DIR}")
                 print(f"  - CSV files with approval statistics")

@@ -36,17 +36,20 @@ drugstats/
 ## Installation
 
 1. Clone or download the project:
+
 ```bash
 cd /Users/esguerra/development/drugstats
 ```
 
-2. Create a virtual environment (using `uv`):
+1. Create a virtual environment (using `uv`):
+
 ```bash
 uv venv
 source .venv/bin/activate
 ```
 
-3. Install dependencies:
+1. Install dependencies:
+
 ```bash
 uv pip install -r requirements.txt
 ```
@@ -56,6 +59,7 @@ uv pip install -r requirements.txt
 ### Basic Usage
 
 Run the main script:
+
 ```bash
 python src/main.py
 ```
@@ -63,6 +67,7 @@ python src/main.py
 ### With FDA API Key
 
 For increased rate limits, set your FDA API key:
+
 ```bash
 export FDA_API_KEY=your_api_key_here
 python src/main.py
@@ -107,17 +112,29 @@ NEW MOLECULAR ENTITIES ONLY (Type 1):
 When you run the script, it generates the following files in the `results/` folder:
 
 ### CSV Files
+
 - **drug_approvals_by_year.csv** - Combined data with all approvals and NME counts by year
 - **all_approvals.csv** - All drug approvals (Type 1-4, 10)
 - **nme_approvals.csv** - New molecular entity approvals (Type 1 only)
 
 ### Plots (PNG)
+
 - **drug_approvals.png** - Two-panel chart showing:
   - Top: All drug approvals by year
   - Bottom: NME approvals by year
 - **approvals_comparison_recent.png** - Side-by-side comparison of all approvals vs NME for the last 15 years
 
 ## Development
+
+Running integration tests (live API)
+
+To execute tests that call the live FDA API (these are slower and subject to rate limits), run:
+
+```bash
+pytest -m integration
+```
+
+
 
 ### Running Tests
 
@@ -128,6 +145,7 @@ pytest tests/
 ### Code Style
 
 The project uses Ruff for code style consistency:
+
 ```bash
 ruff check src/ tests/
 ruff format src/ tests/
