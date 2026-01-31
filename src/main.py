@@ -10,6 +10,7 @@ from fda_client import FDAClient
 from plotting import (
     create_approval_plots,
     create_company_plots,
+    create_adverse_event_plots,
     save_approval_data,
     save_approved_drugs,
     save_adverse_events_data,
@@ -139,6 +140,15 @@ def main() -> None:
                     top_drugs,
                     top_reactions,
                     RESULTS_DIR,
+                )
+
+                # Create plots for adverse event summaries
+                create_adverse_event_plots(
+                    events_by_year,
+                    top_drugs,
+                    top_reactions,
+                    RESULTS_DIR,
+                    top_n=25,
                 )
 
                 print(f"\n✓ Results saved to: {RESULTS_DIR}")
