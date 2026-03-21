@@ -44,7 +44,7 @@ jobs:
         run: echo "No static site build step required; using docs/ contents"
 
       - name: Upload to Pages
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v2
         with:
           path: ./docs
 
