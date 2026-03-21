@@ -140,6 +140,15 @@ python src/main.py
 python scripts/sync_results.py --force
 ```
 
+To view the generated site locally, serve the `docs/` folder and open http://localhost:8000 in your browser:
+
+```bash
+python -m http.server 8000 --directory docs
+# then open http://localhost:8000
+```
+
+Note: The CI workflow runs `python scripts/sync_results.py` without `--force`, so it will skip overwriting existing files in `docs/results/`. If you want the workflow to always publish newly generated files, either update the workflow to call `python scripts/sync_results.py --force` or modify the sync script to overwrite when files differ.
+
 > Add `FDA_API_KEY` as a repository secret (`Settings → Secrets → Actions`) to avoid rate limits when the workflow runs.
 
 
