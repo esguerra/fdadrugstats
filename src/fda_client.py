@@ -21,7 +21,11 @@ class FDAClient:
         Args:
             api_key: Optional FDA API key for increased rate limits.
         """
-        self.api_key = "zp8LFMuTfidJJ8nagQB29dJ9BSifYKf0CkTHUHNo"
+        # Prefer explicit parameter, otherwise read from the FDA_API_KEY
+        # environment variable. Do not hardcode API keys in source.
+        import os
+
+        self.api_key = api_key or os.getenv("FDA_API_KEY")
         self.session = requests.Session()
         # Set a sensible default User-Agent and Accept header so the
         # OpenFDA service can identify callers. Including a repo URL

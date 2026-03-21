@@ -9,8 +9,6 @@ This application retrieves and analyzes FDA drug approval statistics using the o
 1. **All New Drug Approvals** (Type 1-4 and Type 10): Counts new molecular entities, active ingredients, dosage forms, combinations, and new indications
 2. **New Molecular Entities Only** (Type 1): Tracks new molecular entity approvals, which matches the FDA's official "new drug approval" count
 
-The script identifies the core issue from your reference: while total approvals (including all types) were 91 in 2025, the official "new molecular entity" count (Type 1 only) was **43**, which closely matches the reported 46 in the C&EN article (the 3-drug difference likely due to data timing or edge cases in methodology).
-
 ## Project Structure
 
 ```

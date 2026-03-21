@@ -30,6 +30,8 @@ jobs:
       - name: Generate results
         run: |
           python src/main.py
+        env:
+          FDA_API_KEY: ${{ secrets.FDA_API_KEY }}
 
       - name: Sync results
         run: |
