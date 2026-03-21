@@ -21,8 +21,17 @@ class FDAClient:
         Args:
             api_key: Optional FDA API key for increased rate limits.
         """
-        self.api_key = api_key
+        self.api_key = "zp8LFMuTfidJJ8nagQB29dJ9BSifYKf0CkTHUHNo"
         self.session = requests.Session()
+        # Set a sensible default User-Agent and Accept header so the
+        # OpenFDA service can identify callers. Including a repo URL
+        # or contact helps reduce the chance of being blocked.
+        self.session.headers.update(
+            {
+                "User-Agent": "fdadrugstats/1.0 (https://github.com/esguerra/fdadrugstats)",
+                "Accept": "application/json",
+            }
+        )
 
     def _make_request(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         """Make a request to FDA API.
@@ -45,6 +54,23 @@ class FDAClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
+            # Provide additional guidance for 403 responses which often
+            # indicate missing/insufficient API keys, rate limits, or that
+            # the caller was blocked. The HTTPError may carry a response
+            # object we can inspect for status code.
+            status = None
+            try:
+                status = e.response.status_code  # type: ignore[attr-defined]
+            except Exception:
+                status = None
+
+            if status == 403:
+                logger.error(
+                    "Received 403 Forbidden from FDA API — this may be due to missing/insufficient "
+                    "API key, rate limits, or blocked requests. Ensure you've set `FDA_API_KEY` as a "
+                    "secret and include a valid User-Agent header. See https://open.fda.gov/ for details."
+                )
+
             logger.error(f"FDA API request failed: {e}")
             raise
 
