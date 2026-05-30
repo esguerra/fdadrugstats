@@ -36,7 +36,7 @@ jobs:
 
       - name: Sync results
         run: |
-          python scripts/sync_results.py || true
+          python scripts/sync_results.py --force || true
 
       - name: Ensure docs exist
         run: |
