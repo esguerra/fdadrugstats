@@ -1,13 +1,43 @@
 """Plotting module for drug approval statistics."""
 
 import logging
+import textwrap
 from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.ticker import FuncFormatter
 
 logger = logging.getLogger(__name__)
+
+plt.style.use("seaborn-v0_8-whitegrid")
+
+
+def _thousands(x: float, _pos: int) -> str:
+    """Format axis ticks with thousands separators."""
+    return f"{int(x):,}"
+
+
+def _finish_axes(ax: plt.Axes, grid_axis: str = "y") -> None:
+    """Apply shared chart polish for static PNG fallbacks."""
+    ax.grid(axis=grid_axis, alpha=0.25, linewidth=0.8)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.yaxis.set_major_formatter(FuncFormatter(_thousands))
+
+
+def _finish_horizontal_axes(ax: plt.Axes) -> None:
+    """Apply shared polish for horizontal bar charts."""
+    ax.grid(axis="x", alpha=0.25, linewidth=0.8)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.xaxis.set_major_formatter(FuncFormatter(_thousands))
+
+
+def _wrap_labels(labels: list[Any], width: int = 34) -> list[str]:
+    """Wrap long horizontal bar labels so PNGs remain readable."""
+    return [textwrap.fill(str(label), width=width, break_long_words=False) for label in labels]
 
 
 def create_approval_plots(
@@ -31,7 +61,7 @@ def create_approval_plots(
     years_all = sorted(all_approvals.keys())
     counts_all = [all_approvals[year] for year in years_all]
 
-    axes[0].bar(years_all, counts_all, color="steelblue", alpha=0.7)
+    axes[0].bar(years_all, counts_all, color="#2563eb", alpha=0.85, width=0.82)
     axes[0].set_xlabel("Year", fontsize=12)
     axes[0].set_ylabel("Number of Approvals", fontsize=12)
     axes[0].set_title(
@@ -39,14 +69,14 @@ def create_approval_plots(
         fontsize=14,
         fontweight="bold",
     )
-    axes[0].grid(axis="y", alpha=0.3)
+    _finish_axes(axes[0])
     axes[0].set_xlim(years_all[0] - 1, years_all[-1] + 1)
 
     # Plot 2: NME Approvals
     years_nme = sorted(nme_approvals.keys())
     counts_nme = [nme_approvals[year] for year in years_nme]
 
-    axes[1].bar(years_nme, counts_nme, color="darkgreen", alpha=0.7)
+    axes[1].bar(years_nme, counts_nme, color="#059669", alpha=0.85, width=0.82)
     axes[1].set_xlabel("Year", fontsize=12)
     axes[1].set_ylabel("Number of NME Approvals", fontsize=12)
     axes[1].set_title(
@@ -54,7 +84,7 @@ def create_approval_plots(
         fontsize=14,
         fontweight="bold",
     )
-    axes[1].grid(axis="y", alpha=0.3)
+    _finish_axes(axes[1])
     axes[1].set_xlim(years_nme[0] - 1, years_nme[-1] + 1)
 
     plt.tight_layout()
@@ -85,16 +115,16 @@ def create_approval_plots(
         all_recent,
         width,
         label="All Approvals (Type 1-4, 10)",
-        color="steelblue",
-        alpha=0.8,
+        color="#2563eb",
+        alpha=0.85,
     )
     ax.bar(
         [i + width / 2 for i in x],
         nme_recent,
         width,
         label="New Molecular Entities (Type 1)",
-        color="darkgreen",
-        alpha=0.8,
+        color="#f97316",
+        alpha=0.85,
     )
 
     ax.set_xlabel("Year", fontsize=12)
@@ -106,8 +136,8 @@ def create_approval_plots(
     )
     ax.set_xticks(x)
     ax.set_xticklabels(recent_years, rotation=45)
-    ax.legend(fontsize=11)
-    ax.grid(axis="y", alpha=0.3)
+    ax.legend(fontsize=11, frameon=False)
+    _finish_axes(ax)
 
     plt.tight_layout()
     comparison_path = output_dir / "approvals_comparison_recent.png"
@@ -238,18 +268,23 @@ def create_company_plots(output_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(14, 10))
 
     bars = ax.barh(range(len(top_companies)), top_companies.values,
-                    color="teal", alpha=0.8)
+                    color="#059669", alpha=0.9)
 
-    # Color bars with gradient
-    colors = plt.cm.viridis(
-        (top_companies.values - top_companies.values.min())
-        / (top_companies.values.max() - top_companies.values.min())
-    )
+    # Color bars with a stable gradient (including the single-value case)
+    min_count = top_companies.values.min()
+    max_count = top_companies.values.max()
+    if max_count == min_count:
+        gradient_values = [0.65 for _ in top_companies.values]
+    else:
+        gradient_values = (
+            (top_companies.values - min_count) / (max_count - min_count)
+        )
+    colors = plt.cm.viridis(gradient_values)
     for bar, color in zip(bars, colors):
         bar.set_color(color)
 
     ax.set_yticks(range(len(top_companies)))
-    ax.set_yticklabels(top_companies.index, fontsize=10)
+    ax.set_yticklabels(_wrap_labels(list(top_companies.index)), fontsize=9)
     ax.set_xlabel("Number of Approved Drugs", fontsize=12, fontweight="bold")
     ax.set_title(
         f"Top {top_n} Pharmaceutical Companies by Number of Approved Drugs",
@@ -258,11 +293,11 @@ def create_company_plots(output_dir: Path) -> None:
         pad=20,
     )
     ax.invert_yaxis()
-    ax.grid(axis="x", alpha=0.3)
+    _finish_horizontal_axes(ax)
 
     # Add value labels on bars
     for i, v in enumerate(top_companies.values):
-        ax.text(v + 0.5, i, str(v), va="center", fontsize=9)
+        ax.text(v + 0.5, i, f"{v:,}", va="center", fontsize=9)
 
     plt.tight_layout()
     plot_path = output_dir / "drugs_per_company_top30.png"
@@ -274,8 +309,8 @@ def create_company_plots(output_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(14, 8))
 
     # Create histogram of company sizes
-    ax.hist(drugs_per_company.values, bins=50, color="steelblue",
-            alpha=0.7, edgecolor="black")
+    ax.hist(drugs_per_company.values, bins=50, color="#2563eb",
+            alpha=0.75, edgecolor="white", linewidth=0.8)
 
     ax.set_xlabel("Number of Approved Drugs per Company", fontsize=12,
                   fontweight="bold")
@@ -285,7 +320,7 @@ def create_company_plots(output_dir: Path) -> None:
         fontsize=14,
         fontweight="bold",
     )
-    ax.grid(axis="y", alpha=0.3)
+    _finish_axes(ax)
 
     # Add statistics
     stats_text = (
@@ -337,11 +372,12 @@ def create_adverse_event_plots(
         counts = [events_by_year[y] for y in years]
 
         fig, ax = plt.subplots(figsize=(14, 6))
-        ax.plot(years, counts, marker="o", color="crimson")
+        ax.plot(years, counts, marker="o", color="#dc2626", linewidth=2.5)
+        ax.fill_between(years, counts, color="#dc2626", alpha=0.12)
         ax.set_xlabel("Year", fontsize=12)
         ax.set_ylabel("Number of Reports", fontsize=12)
         ax.set_title("Adverse Event Reports by Year", fontsize=14, fontweight="bold")
-        ax.grid(alpha=0.3)
+        _finish_axes(ax)
         plt.tight_layout()
         path = output_dir / "adverse_events_by_year.png"
         plt.savefig(path, dpi=300, bbox_inches="tight")
@@ -351,12 +387,17 @@ def create_adverse_event_plots(
     # Top reported drugs bar chart
     if top_drugs:
         df_drugs = pd.DataFrame(top_drugs).head(top_n)
-        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.25)))
-        ax.barh(df_drugs["term"].astype(str), df_drugs["count"], color="#2ca02c")
+        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.34)))
+        y_pos = range(len(df_drugs))
+        ax.barh(y_pos, df_drugs["count"], color="#7c3aed", alpha=0.9)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(_wrap_labels(df_drugs["term"].tolist()), fontsize=9)
         ax.set_xlabel("Number of Reports", fontsize=12)
         ax.set_title(f"Top {min(top_n, len(df_drugs))} Reported Drugs", fontsize=14, fontweight="bold")
         ax.invert_yaxis()
-        ax.grid(axis="x", alpha=0.3)
+        _finish_horizontal_axes(ax)
+        for i, v in enumerate(df_drugs["count"]):
+            ax.text(v + max(df_drugs["count"]) * 0.01, i, f"{int(v):,}", va="center", fontsize=9)
         plt.tight_layout()
         path = output_dir / "top_reported_drugs.png"
         plt.savefig(path, dpi=300, bbox_inches="tight")
@@ -366,12 +407,17 @@ def create_adverse_event_plots(
     # Top reactions bar chart
     if top_reactions:
         df_rxn = pd.DataFrame(top_reactions).head(top_n)
-        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.25)))
-        ax.barh(df_rxn["term"].astype(str), df_rxn["count"], color="#1f77b4")
+        fig, ax = plt.subplots(figsize=(12, max(6, top_n * 0.34)))
+        y_pos = range(len(df_rxn))
+        ax.barh(y_pos, df_rxn["count"], color="#92400e", alpha=0.9)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(_wrap_labels(df_rxn["term"].tolist()), fontsize=9)
         ax.set_xlabel("Number of Reports", fontsize=12)
         ax.set_title(f"Top {min(top_n, len(df_rxn))} Reported Reactions", fontsize=14, fontweight="bold")
         ax.invert_yaxis()
-        ax.grid(axis="x", alpha=0.3)
+        _finish_horizontal_axes(ax)
+        for i, v in enumerate(df_rxn["count"]):
+            ax.text(v + max(df_rxn["count"]) * 0.01, i, f"{int(v):,}", va="center", fontsize=9)
         plt.tight_layout()
         path = output_dir / "top_reactions.png"
         plt.savefig(path, dpi=300, bbox_inches="tight")

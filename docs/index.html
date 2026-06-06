@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FDA DrugStats — Results</title>
   <style>
-    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width:1100px;margin:2rem auto;color:#222}
-    header{margin-bottom:2rem}
+    :root{--border:#e7eaf0;--muted:#5f6b7a;--panel:#fff;--bg:#f7f9fc}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width:1040px;margin:0 auto;padding:2rem 1rem;color:#1f2937;background:var(--bg)}
+    header{margin-bottom:1.5rem}
     h1{margin:0 0 .2rem}
-    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem}
-    .card{border:1px solid #eee;padding:1rem;border-radius:6px;background:#fff}
-    img{max-width:100%;height:auto}
+    h2{margin-top:0}
+    .grid{display:grid; grid-template-columns: 1fr; gap:1.25rem}
+    .card{border:1px solid var(--border);padding:1.25rem;border-radius:12px;background:var(--panel);box-shadow:0 6px 18px rgba(15,23,42,.04)}
+    .chart{width:100%;height:460px}
+    .chart.short{height:380px}
+    .chart.tall{height:620px}
+    img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border);background:white}
+    .muted{color:var(--muted);font-size:.95rem}
     table{width:100%;border-collapse:collapse}
     table th, table td{border:1px solid #ddd;padding:.35rem;text-align:left}
 
@@ -22,7 +29,7 @@
     body.use-static .static-only { display: block !important; }
 
     footer{margin-top:2rem;color:#666;font-size:.9rem}
-    @media (max-width:760px){.grid{grid-template-columns:1fr}}
+    @media (max-width:760px){body{padding:1rem}.chart,.chart.short,.chart.tall{height:420px}.card{padding:1rem}}
   </style>
 </head>
 <body>
@@ -42,37 +49,43 @@
     <div class="card">
       <h2>Approval plots</h2>
       <p><strong>By year</strong></p>
-      <div id="approvals_plot" class="interactive-only" style="height:380px"></div>
-      <img id="approvals_png" class="static-only" src="results/drug_approvals.png" alt="Drug approvals by year (PNG)" style="max-width:100%;height:auto" />
+      <div id="approvals_plot" class="interactive-only chart"></div>
+      <img id="approvals_png" class="static-only" src="results/drug_approvals.png" alt="Drug approvals by year (PNG)" />
       <p class="muted"><a href="results/drug_approvals.png">PNG fallback / Download</a></p>
     </div>
 
     <div class="card">
       <h2>Approvals comparison</h2>
-      <div id="comparison_plot" class="interactive-only" style="height:320px"></div>
-      <img id="comparison_png" class="static-only" src="results/approvals_comparison_recent.png" alt="Approvals comparison (PNG)" style="max-width:100%;height:auto" />
+      <div id="comparison_plot" class="interactive-only chart short"></div>
+      <img id="comparison_png" class="static-only" src="results/approvals_comparison_recent.png" alt="Approvals comparison (PNG)" />
       <p class="muted"><a href="results/approvals_comparison_recent.png">PNG fallback / Download</a></p>
     </div>
 
     <div class="card">
       <h2>Company analysis</h2>
-      <div id="company_plot" class="interactive-only" style="height:400px"></div>
-      <img id="company_png" class="static-only" src="results/drugs_per_company_top30.png" alt="Top companies (PNG)" style="max-width:100%;height:auto" />
+      <div id="company_plot" class="interactive-only chart tall"></div>
+      <img id="company_png" class="static-only" src="results/drugs_per_company_top30.png" alt="Top companies (PNG)" />
       <p class="muted"><a href="results/drugs_per_company_top30.png">PNG fallback / Download</a></p>
     </div>
 
     <div class="card">
       <h2>Adverse events</h2>
-      <div id="adverse_plot" class="interactive-only" style="height:340px"></div>
-      <img id="adverse_png" class="static-only" src="results/adverse_events_by_year.png" alt="Adverse events by year (PNG)" style="max-width:100%;height:auto" />
+      <div id="adverse_plot" class="interactive-only chart short"></div>
+      <img id="adverse_png" class="static-only" src="results/adverse_events_by_year.png" alt="Adverse events by year (PNG)" />
       <p><a href="results/adverse_events_by_year.png">PNG fallback</a> • <a href="results/adverse_events_by_year.csv">CSV</a></p>
-      <h3>Top reported drugs</h3>
-      <div id="top_drugs_plot" class="interactive-only" style="height:340px"></div>
-      <img id="top_drugs_png" class="static-only" src="results/top_reported_drugs.png" alt="Top reported drugs (PNG)" style="max-width:100%;height:auto" />
+    </div>
+
+    <div class="card">
+      <h2>Top reported drugs</h2>
+      <div id="top_drugs_plot" class="interactive-only chart tall"></div>
+      <img id="top_drugs_png" class="static-only" src="results/top_reported_drugs.png" alt="Top reported drugs (PNG)" />
       <p><a href="results/top_reported_drugs.png">PNG fallback</a> • <a href="results/top_reported_drugs.csv">CSV</a></p>
-      <h3>Top reactions</h3>
-      <div id="top_reactions_plot" class="interactive-only" style="height:340px"></div>
-      <img id="top_reactions_png" class="static-only" src="results/top_reactions.png" alt="Top reactions (PNG)" style="max-width:100%;height:auto" />
+    </div>
+
+    <div class="card">
+      <h2>Top reactions</h2>
+      <div id="top_reactions_plot" class="interactive-only chart tall"></div>
+      <img id="top_reactions_png" class="static-only" src="results/top_reactions.png" alt="Top reactions (PNG)" />
       <p><a href="results/top_reactions.png">PNG fallback</a> • <a href="results/top_reactions.csv">CSV</a></p>
     </div>
   </section>
