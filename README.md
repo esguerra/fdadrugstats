@@ -1,13 +1,18 @@
 # Drug Stats
 
-A Python application for retrieving and analyzing FDA drug approval statistics using the official FDA API endpoints.
+A Python application and static reporting site for retrieving and analyzing FDA drug approval and adverse event statistics using openFDA API endpoints.
 
 ## Overview
 
-This application retrieves and analyzes FDA drug approval statistics using the official FDA API endpoints. It provides two views of the data:
+This application retrieves and analyzes FDA drug approval statistics using openFDA. It provides:
 
-1. **All New Drug Approvals** (Type 1-4 and Type 10): Counts new molecular entities, active ingredients, dosage forms, combinations, and new indications
-2. **New Molecular Entities Only** (Type 1): Tracks new molecular entity approvals, which matches the FDA's official "new drug approval" count
+1. **All New Drug Approvals** (Type 1-4 and Type 10): Counts new molecular entities, active ingredients, dosage forms, combinations, and new indications.
+
+2. **New Molecular Entities Only** (Type 1): Tracks new molecular entity approvals, which matches the FDA's official "new drug approval" count.
+
+3. **Adverse Event Summaries**: Reports by year plus top reported drugs and reactions from the FDA adverse event endpoint.
+
+The generated CSVs and PNG fallback plots are published in `docs/results/`, and `docs/index.html` renders interactive Plotly charts for the deployed GitHub Pages site.
 
 ## Project Structure
 
@@ -20,23 +25,41 @@ drugstats/
 │   ├── statistics.py        # Statistics analysis functions
 │   └── plotting.py          # Plotting and data export functions
 ├── tests/
-│   └── __init__.py
+│   ├── __init__.py
+│   └── test_adverse_events_live.py
 ├── results/                 # Output folder (auto-generated)
-│   ├── drug_approvals.png              # All approvals plots
-│   ├── approvals_comparison_recent.png # Recent years comparison
-│   ├── drug_approvals_by_year.csv      # Combined data CSV
-│   ├── all_approvals.csv               # All approvals data
-│   └── nme_approvals.csv               # NME approvals data
+│   ├── drug_approvals.png
+│   ├── approvals_comparison_recent.png
+│   ├── drugs_per_company_top30.png
+│   ├── adverse_events_by_year.png
+│   ├── top_reported_drugs.png
+│   ├── top_reactions.png
+│   ├── company_distribution.png
+│   ├── drug_approvals_by_year.csv
+│   ├── all_approvals.csv
+│   ├── nme_approvals.csv
+│   ├── approved_drugs_all.csv
+│   ├── approved_drugs_nme.csv
+│   ├── adverse_events_by_year.csv
+│   ├── top_reported_drugs.csv
+│   └── top_reactions.csv
+├── docs/                    # GitHub Pages static site
+│   ├── index.html
+│   ├── js/plotly_charts.js
+│   └── results/             # Synced CSV/PNG outputs for deployment
+├── scripts/
+│   └── sync_results.py
 ├── requirements.txt
 └── README.md
 ```
 
 ## Installation
 
-1. Clone or download the project:
+1. Clone the project and enter the repository:
 
 ```bash
-cd /Users/esguerra/development/drugstats
+git clone https://github.com/esguerra/fdadrugstats.git
+cd fdadrugstats
 ```
 
 1. Create a virtual environment (using `uv`):
@@ -62,6 +85,8 @@ Run the main script:
 python src/main.py
 ```
 
+This fetches approval and adverse-event summaries, writes CSV files to `results/`, and generates PNG fallback plots.
+
 ### With FDA API Key
 
 For increased rate limits, set your FDA API key:
@@ -77,11 +102,11 @@ Get a free API key from: https://open.fda.gov/
 
 - **Drug Approvals**: `https://api.fda.gov/drug/drugsfda.json`
   - Retrieves information about approved drugs
-  - Filters for drugs with "Approved" marketing status
+  - Counts original (`ORIG`) submissions with approved (`AP`) submission status for the selected submission class codes
 
 - **Adverse Events**: `https://api.fda.gov/drug/event.json`
-  - Retrieves adverse event reports
-  - Can be extended for additional statistics
+  - Aggregates adverse event reports by received date
+  - Retrieves top reported drugs and top reactions
 
 ## Example Output
 
@@ -101,7 +126,8 @@ NEW MOLECULAR ENTITIES ONLY (Type 1):
   2025: 43
 
 ✓ Results saved to: ./results
-  - CSV files with approval data
+  - CSV files with approval statistics
+  - CSV files with drug names and details
   - PNG plots with visualizations
 ```
 
@@ -112,8 +138,13 @@ When you run the script, it generates the following files in the `results/` fold
 ### CSV Files
 
 - **drug_approvals_by_year.csv** - Combined data with all approvals and NME counts by year
-- **all_approvals.csv** - All drug approvals (Type 1-4, 10)
-- **nme_approvals.csv** - New molecular entity approvals (Type 1 only)
+- **all_approvals.csv** - All approval counts by year (Type 1-4, 10)
+- **nme_approvals.csv** - NME approval counts by year (Type 1 only)
+- **approved_drugs_all.csv** - Approved drug details for all included approval types
+- **approved_drugs_nme.csv** - Approved drug details for NMEs only
+- **adverse_events_by_year.csv** - Adverse event report counts by year
+- **top_reported_drugs.csv** - Top drugs reported in adverse event records
+- **top_reactions.csv** - Top reactions reported in adverse event records
 
 ### Plots (PNG)
 
@@ -121,6 +152,11 @@ When you run the script, it generates the following files in the `results/` fold
   - Top: All drug approvals by year
   - Bottom: NME approvals by year
 - **approvals_comparison_recent.png** - Side-by-side comparison of all approvals vs NME for the last 15 years
+- **drugs_per_company_top30.png** - Top pharmaceutical companies by approved drug count
+- **company_distribution.png** - Distribution of approved drugs across companies
+- **adverse_events_by_year.png** - Adverse event reports by year
+- **top_reported_drugs.png** - Top reported drugs in adverse event records
+- **top_reactions.png** - Top reported reactions in adverse event records
 
 ## Publishing results (GitHub Pages)
 
@@ -128,7 +164,7 @@ This project can publish generated CSVs and plots as a static site via GitHub Pa
 
 - Installs dependencies (`pip install -r requirements.txt`)
 - Runs `python src/main.py` to generate `results/`
-- Runs `python scripts/sync_results.py` to copy results into `docs/results/`
+- Runs `python scripts/sync_results.py --force` to copy results into `docs/results/`
 - Deploys the `docs/` folder to GitHub Pages (the repo contains `docs/CNAME` configured for `fdadrugstats.mesguerra.org`)
 
 If you prefer local control, run:
@@ -145,10 +181,9 @@ python -m http.server 8000 --directory docs
 # then open http://localhost:8000
 ```
 
-Note: The CI workflow runs `python scripts/sync_results.py` without `--force`, so it will skip overwriting existing files in `docs/results/`. If you want the workflow to always publish newly generated files, either update the workflow to call `python scripts/sync_results.py --force` or modify the sync script to overwrite when files differ.
+The published page uses interactive Plotly charts by default and includes a toggle to use static PNG fallback plots for slow connections.
 
-> Add `FDA_API_KEY` as a repository secret (`Settings → Secrets → Actions`) to avoid rate limits when the workflow runs.
-
+> Add `FDA_API_KEY` as a repository secret (`Settings → Secrets → Actions`) to avoid rate limits when the workflow runs. Live API tests and deployment can fail with openFDA `403`/rate-limit responses if no valid key is available.
 
 ## Development
 
@@ -159,8 +194,6 @@ To execute tests that call the live FDA API (these are slower and subject to rat
 ```bash
 pytest -m integration
 ```
-
-
 
 ### Running Tests
 
@@ -180,10 +213,6 @@ ruff format src/ tests/
 ## Documentation
 
 All functions and classes include comprehensive docstrings following PEP 257 conventions.
-
-## License
-
-[Add your license here]
 
 ## References
 
