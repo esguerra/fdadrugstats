@@ -29,14 +29,22 @@ jobs:
           pip install -r requirements.txt
 
       - name: Generate results
+        id: generate_results
+        continue-on-error: true
         run: |
           python src/main.py
         env:
           FDA_API_KEY: ${{ secrets.FDA_API_KEY }}
 
-      - name: Sync results
+      - name: Sync generated results
+        if: steps.generate_results.outcome == 'success'
         run: |
-          python scripts/sync_results.py --force || true
+          python scripts/sync_results.py --force
+
+      - name: Use committed docs results when API generation fails
+        if: steps.generate_results.outcome != 'success'
+        run: |
+          echo "Result generation failed; deploying committed docs/results assets instead."
 
       - name: Ensure docs exist
         run: |
