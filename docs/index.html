@@ -25,7 +25,8 @@
     .table-controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.75rem 0 1rem}
     .table-controls input{flex:1;min-width:240px;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px;font:inherit}
     th.sortable{cursor:pointer;user-select:none}
-    th.sortable:hover{background:#e8eef8}
+    th.sortable:hover, th.sortable:focus{background:#e8eef8;outline:2px solid #bfdbfe;outline-offset:-2px}
+    th.sortable::after{content:attr(data-sort-marker);color:var(--muted);margin-left:.25rem}
 
     /* Toggle styles for static vs interactive charts */
     .toggle { margin-top: .6rem; font-size: .95rem; }
@@ -108,11 +109,11 @@
       <table>
         <thead>
           <tr>
-            <th class="sortable" data-sort="application_number">Application</th>
-            <th class="sortable" data-sort="brand_name">Brand</th>
-            <th class="sortable" data-sort="generic_name">Generic</th>
-            <th class="sortable" data-sort="company">Company</th>
-            <th class="sortable" data-sort="submission_class">Submission class</th>
+            <th class="sortable" data-sort="application_number" tabindex="0" aria-sort="none">Application</th>
+            <th class="sortable" data-sort="brand_name" tabindex="0" aria-sort="ascending">Brand</th>
+            <th class="sortable" data-sort="generic_name" tabindex="0" aria-sort="none">Generic</th>
+            <th class="sortable" data-sort="company" tabindex="0" aria-sort="none">Company</th>
+            <th class="sortable" data-sort="submission_class" tabindex="0" aria-sort="none">Submission class</th>
           </tr>
         </thead>
         <tbody id="current_year_approvals_body">

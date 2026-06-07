@@ -103,10 +103,12 @@
 
     function updateHeaderLabels() {
       headers.forEach((header) => {
-        const label = header.dataset.label || header.innerText.replace(/[ ▲▼]$/u, '');
-        header.dataset.label = label;
-        const marker = header.dataset.sort === sortKey ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
-        header.innerText = `${label}${marker}`;
+        const isActive = header.dataset.sort === sortKey;
+        header.dataset.sortMarker = isActive ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+        header.setAttribute(
+          'aria-sort',
+          isActive ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none',
+        );
       });
     }
 
@@ -161,17 +163,26 @@
       const data = await parseCsv('results/approved_drugs_all.csv');
       approvals = data.filter((r) => safeNumber(r.approval_year) === year);
 
+      function sortByHeader(header) {
+        const nextKey = header.dataset.sort;
+        if (!nextKey) return;
+        if (sortKey === nextKey) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortKey = nextKey;
+          sortDirection = 'asc';
+        }
+        updateHeaderLabels();
+        renderTable();
+      }
+
       headers.forEach((header) => {
-        header.addEventListener('click', () => {
-          const nextKey = header.dataset.sort;
-          if (sortKey === nextKey) {
-            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-          } else {
-            sortKey = nextKey;
-            sortDirection = 'asc';
+        header.addEventListener('click', () => sortByHeader(header));
+        header.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            sortByHeader(header);
           }
-          updateHeaderLabels();
-          renderTable();
         });
       });
 
