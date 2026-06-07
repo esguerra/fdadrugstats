@@ -19,7 +19,9 @@
     img{max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border);background:white}
     .muted{color:var(--muted);font-size:.95rem}
     table{width:100%;border-collapse:collapse}
-    table th, table td{border:1px solid #ddd;padding:.35rem;text-align:left}
+    table th, table td{border:1px solid #ddd;padding:.45rem;text-align:left;vertical-align:top}
+    table th{background:#f3f6fb}
+    .table-wrap{overflow-x:auto}
 
     /* Toggle styles for static vs interactive charts */
     .toggle { margin-top: .6rem; font-size: .95rem; }
@@ -59,6 +61,28 @@
       <div id="comparison_plot" class="interactive-only chart short"></div>
       <img id="comparison_png" class="static-only" src="results/approvals_comparison_recent.png" alt="Approvals comparison (PNG)" />
       <p class="muted"><a href="results/approvals_comparison_recent.png">Download PNG</a></p>
+    </div>
+
+    <div class="card">
+      <h2 id="current_year_approvals_title">Current year approvals</h2>
+      <p class="muted" id="current_year_approvals_summary">Loading approval table…</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Application</th>
+              <th>Brand</th>
+              <th>Generic</th>
+              <th>Company</th>
+              <th>Submission class</th>
+            </tr>
+          </thead>
+          <tbody id="current_year_approvals_body">
+            <tr><td colspan="5">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><a href="results/approved_drugs_all.csv">Download CSV</a></p>
     </div>
 
     <div class="card">

@@ -74,6 +74,61 @@
     if (el) el.innerText = message;
   }
 
+  function text(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    return String(value);
+  }
+
+  function escapeHtml(value) {
+    return text(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  async function renderCurrentYearApprovals() {
+    const title = document.getElementById('current_year_approvals_title');
+    const summary = document.getElementById('current_year_approvals_summary');
+    const body = document.getElementById('current_year_approvals_body');
+    if (!body) return;
+
+    const year = new Date().getFullYear();
+    if (title) title.innerText = `${year} approvals so far`;
+
+    try {
+      const data = await parseCsv('results/approved_drugs_all.csv');
+      const approvals = data
+        .filter((r) => safeNumber(r.approval_year) === year)
+        .sort((a, b) => text(a.brand_name).localeCompare(text(b.brand_name)));
+
+      if (summary) {
+        const nmeCount = approvals.filter((r) => text(r.submission_class).includes('Type 1')).length;
+        summary.innerText = `${approvals.length.toLocaleString()} approvals listed for ${year}, including ${nmeCount.toLocaleString()} new molecular entities.`;
+      }
+
+      if (approvals.length === 0) {
+        body.innerHTML = `<tr><td colspan="5">No ${year} approvals are listed in the current data.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = approvals.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.application_number)}</td>
+          <td>${escapeHtml(r.brand_name)}</td>
+          <td>${escapeHtml(r.generic_name)}</td>
+          <td>${escapeHtml(r.company)}</td>
+          <td>${escapeHtml(r.submission_class)}</td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      console.error('Error rendering current year approvals:', err);
+      if (summary) summary.innerText = 'Error loading current year approval table';
+      body.innerHTML = '<tr><td colspan="5">Error loading approval table.</td></tr>';
+    }
+  }
+
   async function renderApprovals() {
     try {
       const data = (await parseCsv('results/drug_approvals_by_year.csv')).sort(byYear);
@@ -327,6 +382,7 @@
       });
     }
 
+    renderCurrentYearApprovals();
     if (!stored) renderAll();
   });
 })();
