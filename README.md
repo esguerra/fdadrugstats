@@ -12,7 +12,7 @@ This application retrieves and analyzes FDA drug approval statistics using openF
 
 3. **Adverse Event Summaries**: Reports by year plus top reported drugs and reactions from the FDA adverse event endpoint.
 
-The generated CSVs and PNG fallback plots are published in `docs/results/`, and `docs/index.html` renders interactive Plotly charts for the deployed GitHub Pages site.
+The generated CSVs and static PNG plots are published in `docs/results/`, and `docs/index.html` renders interactive Plotly charts for the deployed GitHub Pages site.
 
 ## Project Structure
 
@@ -85,7 +85,7 @@ Run the main script:
 python src/main.py
 ```
 
-This fetches approval and adverse-event summaries, writes CSV files to `results/`, and generates PNG fallback plots.
+This fetches approval and adverse-event summaries, writes CSV files to `results/`, and generates static PNG plots.
 
 ### With FDA API Key
 
@@ -181,7 +181,7 @@ python -m http.server 8000 --directory docs
 # then open http://localhost:8000
 ```
 
-The published page uses interactive Plotly charts by default and includes a toggle to use static PNG fallback plots for slow connections.
+The published page uses interactive Plotly charts by default and includes a toggle to use static PNG plots for slow connections.
 
 > Add `FDA_API_KEY` as a repository secret (`Settings → Secrets → Actions`) to avoid rate limits when the workflow runs. Live API tests and deployment can fail with openFDA `403`/rate-limit responses if no valid key is available.
 

@@ -20,7 +20,7 @@ def _thousands(x: float, _pos: int) -> str:
 
 
 def _finish_axes(ax: plt.Axes, grid_axis: str = "y") -> None:
-    """Apply shared chart polish for static PNG fallbacks."""
+    """Apply shared chart polish for static PNG plots."""}]}曾道人if you think src not needed okay done. Check. Since user likely wants commit? They didn't ask. final concise. But maybe maybe do not commit. Need maybe 
     ax.grid(axis=grid_axis, alpha=0.25, linewidth=0.8)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
