@@ -57,3 +57,5 @@ logs/
 Thumbs.db
 
 results
+!docs/results/
+!docs/results/**
