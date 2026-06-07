@@ -92,28 +92,59 @@
     const title = document.getElementById('current_year_approvals_title');
     const summary = document.getElementById('current_year_approvals_summary');
     const body = document.getElementById('current_year_approvals_body');
+    const search = document.getElementById('current_year_approvals_search');
+    const headers = Array.from(document.querySelectorAll('th[data-sort]'));
     if (!body) return;
 
     const year = new Date().getFullYear();
-    if (title) title.innerText = `${year} approvals so far`;
+    let approvals = [];
+    let sortKey = 'brand_name';
+    let sortDirection = 'asc';
 
-    try {
-      const data = await parseCsv('results/approved_drugs_all.csv');
-      const approvals = data
-        .filter((r) => safeNumber(r.approval_year) === year)
-        .sort((a, b) => text(a.brand_name).localeCompare(text(b.brand_name)));
+    function updateHeaderLabels() {
+      headers.forEach((header) => {
+        const label = header.dataset.label || header.innerText.replace(/[ ▲▼]$/u, '');
+        header.dataset.label = label;
+        const marker = header.dataset.sort === sortKey ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+        header.innerText = `${label}${marker}`;
+      });
+    }
+
+    function matchesSearch(row, query) {
+      if (!query) return true;
+      return [
+        row.application_number,
+        row.brand_name,
+        row.generic_name,
+        row.company,
+        row.submission_class,
+      ].some((value) => text(value).toLowerCase().includes(query));
+    }
+
+    function renderTable() {
+      const query = (search?.value || '').trim().toLowerCase();
+      const filtered = approvals
+        .filter((row) => matchesSearch(row, query))
+        .sort((a, b) => {
+          const result = text(a[sortKey]).localeCompare(text(b[sortKey]), undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          });
+          return sortDirection === 'asc' ? result : -result;
+        });
 
       if (summary) {
         const nmeCount = approvals.filter((r) => text(r.submission_class).includes('Type 1')).length;
-        summary.innerText = `${approvals.length.toLocaleString()} approvals listed for ${year}, including ${nmeCount.toLocaleString()} new molecular entities.`;
+        const filterText = query ? ` Showing ${filtered.length.toLocaleString()} matching rows.` : '';
+        summary.innerText = `${approvals.length.toLocaleString()} approvals listed for ${year}, including ${nmeCount.toLocaleString()} new molecular entities.${filterText}`;
       }
 
-      if (approvals.length === 0) {
-        body.innerHTML = `<tr><td colspan="5">No ${year} approvals are listed in the current data.</td></tr>`;
+      if (filtered.length === 0) {
+        body.innerHTML = `<tr><td colspan="5">No ${year} approvals match the current search.</td></tr>`;
         return;
       }
 
-      body.innerHTML = approvals.map((r) => `
+      body.innerHTML = filtered.map((r) => `
         <tr>
           <td>${escapeHtml(r.application_number)}</td>
           <td>${escapeHtml(r.brand_name)}</td>
@@ -122,6 +153,32 @@
           <td>${escapeHtml(r.submission_class)}</td>
         </tr>
       `).join('');
+    }
+
+    if (title) title.innerText = `${year} approvals so far`;
+
+    try {
+      const data = await parseCsv('results/approved_drugs_all.csv');
+      approvals = data.filter((r) => safeNumber(r.approval_year) === year);
+
+      headers.forEach((header) => {
+        header.addEventListener('click', () => {
+          const nextKey = header.dataset.sort;
+          if (sortKey === nextKey) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortKey = nextKey;
+            sortDirection = 'asc';
+          }
+          updateHeaderLabels();
+          renderTable();
+        });
+      });
+
+      if (search) search.addEventListener('input', renderTable);
+
+      updateHeaderLabels();
+      renderTable();
     } catch (err) {
       console.error('Error rendering current year approvals:', err);
       if (summary) summary.innerText = 'Error loading current year approval table';

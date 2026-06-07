@@ -22,6 +22,10 @@
     table th, table td{border:1px solid #ddd;padding:.45rem;text-align:left;vertical-align:top}
     table th{background:#f3f6fb}
     .table-wrap{overflow-x:auto}
+    .table-controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.75rem 0 1rem}
+    .table-controls input{flex:1;min-width:240px;padding:.55rem .7rem;border:1px solid var(--border);border-radius:8px;font:inherit}
+    th.sortable{cursor:pointer;user-select:none}
+    th.sortable:hover{background:#e8eef8}
 
     /* Toggle styles for static vs interactive charts */
     .toggle { margin-top: .6rem; font-size: .95rem; }
@@ -63,27 +67,6 @@
       <p class="muted"><a href="results/approvals_comparison_recent.png">Download PNG</a></p>
     </div>
 
-    <div class="card">
-      <h2 id="current_year_approvals_title">Current year approvals</h2>
-      <p class="muted" id="current_year_approvals_summary">Loading approval table…</p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Application</th>
-              <th>Brand</th>
-              <th>Generic</th>
-              <th>Company</th>
-              <th>Submission class</th>
-            </tr>
-          </thead>
-          <tbody id="current_year_approvals_body">
-            <tr><td colspan="5">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p><a href="results/approved_drugs_all.csv">Download CSV</a></p>
-    </div>
 
     <div class="card">
       <h2>Company analysis</h2>
@@ -125,6 +108,32 @@
       <li><a href="results/top_reported_drugs.csv">top_reported_drugs.csv</a></li>
       <li><a href="results/top_reactions.csv">top_reactions.csv</a></li>
     </ul>
+  </section>
+
+  <section style="margin-top:2rem" class="card">
+    <h2 id="current_year_approvals_title">Current year approvals</h2>
+    <p class="muted" id="current_year_approvals_summary">Loading approval table…</p>
+    <div class="table-controls">
+      <label for="current_year_approvals_search"><strong>Search:</strong></label>
+      <input id="current_year_approvals_search" type="search" placeholder="Filter by company, drug, application, or class (for example: Novo Nordisk)" />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="application_number">Application</th>
+            <th class="sortable" data-sort="brand_name">Brand</th>
+            <th class="sortable" data-sort="generic_name">Generic</th>
+            <th class="sortable" data-sort="company">Company</th>
+            <th class="sortable" data-sort="submission_class">Submission class</th>
+          </tr>
+        </thead>
+        <tbody id="current_year_approvals_body">
+          <tr><td colspan="5">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><a href="results/approved_drugs_all.csv">Download CSV</a></p>
   </section>
 
   <footer>
